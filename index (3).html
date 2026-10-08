@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>discox - Eğitim ve Oyun Platformu</title>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 500px; background: #1e293b; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; position: relative; min-height: 620px; }
+        
+        .header { background: #0f172a; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .logo-area { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: bold; color: #38bdf8; }
+        .verified-badge { background: #22c55e; color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; justify-content: center; align-items: center; font-size: 11px; }
+        .menu-btn { background: #334155; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 16px; display: none; }
+        
+        .meb-notice { font-size: 11px; color: #94a3b8; text-align: center; background: #090d16; padding: 6px; border-bottom: 1px solid #334155; }
+
+        .content { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        input, textarea, select, button { width: 100%; padding: 12px; border: none; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input, textarea, select { background: #334155; color: #fff; outline: none; }
+        button { background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0ea5e9; }
+
+        .screen { display: none; flex-direction: column; gap: 12px; }
+        .screen.active { display: flex; }
+        
+        .game-card { background: #334155; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; border-left: 4px solid #38bdf8; }
+        .error-text { color: #f87171; font-size: 12px; font-weight: bold; }
+        .success-box { background: #064e3b; border: 1px solid #10b981; padding: 10px; border-radius: 8px; display: none; font-size: 13px; text-align: center; }
+        
+        .drawer { position: absolute; top: 0; right: -100%; width: 75%; height: 100%; background: #0f172a; z-index: 10; transition: 0.3s ease; padding: 20px; box-sizing: border-box; border-left: 1px solid #334155; display: flex; flex-direction: column; gap: 10px; }
+        .drawer.open { right: 0; }
+
+        .notification-box { background: #1e293b; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; font-size: 12px; margin-top: 5px; display: none; }
+        
+        .admin-panel { background: #450a0a; border: 1px solid #dc2626; padding: 12px; border-radius: 8px; display: none; margin-top: 10px; }
+        .review-card { background: #2a1212; padding: 8px; border-radius: 6px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 6px; border: 1px solid #dc2626; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo-area">
+                <span>discox</span>
+                <span class="verified-badge">✓</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" id="logoutBtn" onclick="cikisYap()" style="display:none; width:auto; padding: 6px 10px; background:#ef4444; color:white; font-size:12px;">Çıkış Yap</button>
+                <button type="button" class="menu-btn" id="menuToggleBtn" onclick="menuToggle()">☰</button>
+            </div>
+        </div>
+        <div class="meb-notice">Milli Eğitim Bakanlığı (MEB) tarafından onay alınmıştır. Eğitim dostu platform.</div>
+
+        <div class="drawer" id="sideDrawer">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 style="margin:0; color:#38bdf8;">Menü & İşlemler</h4>
+                <button type="button" id="closeDrawerBtn" onclick="menuToggle()" style="width:auto; background:#334155; color:white; padding:4px 8px;">✕</button>
+            </div>
+            <hr style="border-color:#334155; width:100%;">
+            <h4>Oyun Oluştur</h4>
+            <input type="text" id="gameName" placeholder="Oyun Adı">
+            <textarea id="gameCode" placeholder="Wordwall oyun linki veya açıklaması..."></textarea>
+            <button type="button" id="submitGameBtn" onclick="oyunOlusturIstegiGonder()" style="background:#10b981; color:white;">İncelemeye Gönder</button>
+            <p style="font-size:11px; color:#94a3b8;">* Oyununuz discox3728@gmail.com tarafından incelenip onaylandıktan sonra yayınlanır.</p>
+        </div>
+
+        <div class="content screen active" id="login-screen">
+            <h3>discox'a Güvenli Giriş</h3>
+            <p style="font-size:12px; color:#94a3b8;">🔒 İstediğin şifreyi yazarak hemen giriş yapabilirsin.</p>
+            <input type="email" id="email" placeholder="E-posta adresin">
+            <input type="password" id="password" placeholder="Şifren (İstediğin gibi yaz)">
+            <button type="button" id="getSecretCodeBtn" onclick="sifreyiOnayla()">Şifreyi Onayla ve Doğrulama Kodu Üret</button>
+            <p id="login-error" class="error-text"></p>
+
+            <div class="success-box" id="secretCodeArea">
+                <p style="margin:0 0 5px 0; color:#34d399;"><b>Cihaz Doğrulandı! Güvenlik Kodun:</b></p>
+                <div id="generatedCodeDisplay" style="font-size: 18px; font-weight: bold; background: #022c22; padding: 8px; border-radius: 6px; letter-spacing: 2px; margin-bottom: 8px; color: #6ee7b7;"></div>
+                <input type="text" id="confirmCodeInput" placeholder="Yukarıdaki kodu buraya yaz...">
+                <button type="button" id="confirmCodeBtn" onclick="koduDogrula()" style="background:#10b981; color:white; margin-top:8px;">Kodu Onayla ve Kalıcı Giriş Yap</button>
+            </div>
+        </div>
+
+        <div class="content screen" id="main-screen">
+            <h3>Hoş Geldin! <span id="userProfileDisplay" style="font-size:14px; color:#38bdf8;"></span></h3>
+            
+            <div class="notification-box" id="userNotificationBox">
+                <b>🔔 Bildirimler:</b> <span id="notificationText">Hiç bildirim yok.</span>
+            </div>
+
+            <h4>Wordwall & Onaylanmış Topluluk Oyunları</h4>
+            <div id="games-list" style="max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:6px;"></div>
+
+            <div class="admin-panel" id="adminSection">
+                <h4 style="color:#fca5a5; margin:0 0 5px 0;">🛡️ Admin: İncelemeler ve Dilekçe Kutusu</h4>
+                <p style="font-size:11px; margin:0 0 5px 0; color:#cbd5e1;">Bekleyen Oyunlar:</p>
+                <div id="review-list" style="display:flex; flex-direction:column; gap:6px; max-height:120px; overflow-y:auto; margin-bottom:10px;"></div>
+                
+                <p style="font-size:11px; margin:0 0 5px 0; color:#cbd5e1;">Gelen Özel Dilekçeler ve Şikayetler (Geçici Banla):</p>
+                <div id="complaints-list" style="display:flex; flex-direction:column; gap:6px; max-height:150px; overflow-y:auto;"></div>
+            </div>
+
+            <div style="background: #111827; padding: 10px; border-radius: 8px; margin-top:5px;">
+                <h4 style="margin:0 0 5px 0; font-size:13px;">Özel Dilekçe / Şikayet Gönder</h4>
+                <textarea id="complaintText" placeholder="Şikayetinizi veya dilekçenizi buraya yazın..." style="height:50px; font-size:12px;"></textarea>
+                <button type="button" id="submitComplaintBtn" onclick="sikayetGonder()" style="background:#f59e0b; color:#0f172a; margin-top:5px; padding:8px; font-size:12px;">Yöneticiye (discox3728@gmail.com) İlet</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSecretKey = "";
+        let loggedInEmail = localStorage.getItem('discox_logged_email') || "";
+
+        let games = JSON.parse(localStorage.getItem('discox_games')) || [
+            { id: 1, name: "Matematik Çarpım Tablosu (Wordwall)", code: "https://wordwall.net/tr/resource/ornek1", creator: "Wordwall Resmi", email: "support@wordwall.net" },
+            { id: 2, name: "Fen Bilimleri Hücre Yarışması", code: "https://wordwall.net/tr/resource/ornek2", creator: "Wordwall Resmi", email: "support@wordwall.net" }
+        ];
+
+        let pendingGames = JSON.parse(localStorage.getItem('discox_pending')) || [];
+        let complaintsQueue = JSON.parse(localStorage.getItem('discox_complaints')) || [];
+        let userNotifications = JSON.parse(localStorage.getItem('discox_notifs')) || {};
+        let bannedUsers = JSON.parse(localStorage.getItem('discox_bans')) || {};
+
+        if (loggedInEmail) {
+            if (bannedUsers[loggedInEmail] && Date.now() < bannedUsers[loggedInEmail]) {
+                const kalanGun = Math.ceil((bannedUsers[loggedInEmail] - Date.now()) / (1000 * 60 * 60 * 24));
+                alert(`Hesabınız geçici olarak askıya alınmıştır! Kalan süre: Yaklaşık ${kalanGun} gün.`);
+                localStorage.removeItem('discox_logged_email');
+            } else {
+                window.addEventListener('DOMContentLoaded', () => {
+                    girisEkraniniGec(loggedInEmail);
+                });
+            }
+        }
+
+        function sifreyiOnayla() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errEl = document.getElementById('login-error');
+            errEl.innerText = "";
+
+            if (bannedUsers[email] && Date.now() < bannedUsers[email]) {
+                const kalanGun = Math.ceil((bannedUsers[email] - Date.now()) / (1000 * 60 * 60 * 24));
+                errEl.innerText = `Bu hesap geçici olarak askıya alınmış! (${kalanGun} gün banlı)`;
+                return;
+            }
+
+            if (!email || !password) {
+                errEl.innerText = "Lütfen e-posta ve şifrenizi girin.";
+                return;
+            }
+
+            if (!email.includes('@')) {
+                errEl.innerText = "Geçerli bir e-posta adresi girin!";
+                return;
+            }
+
+            loggedInEmail = email;
+            currentSecretKey = "DISC-" + Math.floor(1000 + Math.random() * 9000);
+            
+            document.getElementById('generatedCodeDisplay').innerText = currentSecretKey;
+            document.getElementById('secretCodeArea').style.display = 'block';
+            document.getElementById('getSecretCodeBtn').style.display = 'none';
+        }
+
+        function koduDogrula() {
+            const enteredCode = document.getElementById('confirmCodeInput').value.trim();
+
+            if (enteredCode === currentSecretKey) {
+                localStorage.setItem('discox_logged_email', loggedInEmail);
+                girisEkraniniGec(loggedInEmail);
+            } else {
+                alert("Güvenlik kodu hatalı!");
+            }
+        }
+
+        function girisEkraniniGec(email) {
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('active');
+            document.getElementById('logoutBtn').style.display = 'block';
+            document.getElementById('menuToggleBtn').style.display = 'block';
+            document.getElementById('userProfileDisplay').innerText = `(${email})`;
+
+            bildirimleriGoster(email);
+            oyunlariGoster();
+
+            if (email.toLowerCase() === "discox3728@gmail.com") {
+                document.getElementById('adminSection').style.display = 'block';
+                incelemeleriGoster();
+                sikayetleriGoster();
+            }
+        }
+
+        function cikisYap() {
+            localStorage.removeItem('discox_logged_email');
+            location.reload();
+        }
+
+        function menuToggle() {
+            document.getElementById('sideDrawer').classList.toggle('open');
+        }
+
+        function oyunOlusturIstegiGonder() {
+            const name = document.getElementById('gameName').value.trim();
+            const code = document.getElementById('gameCode').value.trim();
+            if (!name || !code) {
+                alert("Lütfen oyun adını ve linkini doldurun.");
+                return;
+            }
+
+            const newGame = {
+                id: Date.now(),
+                name: name,
+                code: code,
+                creator: loggedInEmail.split('@')[0],
+                email: loggedInEmail
+            };
+
+            pendingGames.push(newGame);
+            localStorage.setItem('discox_pending', JSON.stringify(pendingGames));
+            
+            document.getElementById('gameName').value = '';
+            document.getElementById('gameCode').value = '';
+            menuToggle();
+
+            alert("Oyununuz discox3728@gmail.com tarafından incelemeye alınmıştır!");
+        }
+
+        function oyunlariGoster() {
+            let html = "";
+            games.forEach((game) => {
+                html += `<div class="game-card">
+                    <div>
+                        <b>${game.name}</b><br>
+                        <a href="${game.code}" target="_blank" style="font-size:12px; color:#38bdf8; text-decoration:underline;">Oyunu Oyna (Wordwall)</a><br>
+                        <span style="font-size:10px; color:#94a3b8;">👤 ${game.creator} (${game.email})</span>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('games-list').innerHTML = html || "<p style='font-size:12px; color:#94a3b8;'>Oyun bulunamadı.</p>";
+        }
+
+        function incelemeleriGoster() {
+            let html = "";
+            pendingGames.forEach((game, index) => {
+                html += `<div class="review-card">
+                    <div>
+                        <b style="color:#fca5a5;">${game.name}</b><br>
+                        <span style="font-size:11px; color:#cbd5e1;">Kurucu: ${game.email}</span><br>
+                        <span style="font-size:11px; color:#38bdf8;">Link: ${game.code}</span>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button type="button" onclick="oyunInceleKarar(${index}, true)" style="background:#10b981; color:white; width:30px; height:30px; border-radius:50%; font-size:13px;">✓</button>
+                        <button type="button" onclick="oyunInceleKarar(${index}, false)" style="background:#dc2626; color:white; width:30px; height:30px; border-radius:50%; font-size:13px;">✕</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('review-list').innerHTML = html || "<p style='font-size:11px; color:#94a3b8;'>İnceleme bekleyen oyun yok.</p>";
+        }
+
+        function oyunInceleKarar(index, isApproved) {
+            const game = pendingGames[index];
+            
+            if (isApproved) {
+                games.push(game);
+                localStorage.setItem('discox_games', JSON.stringify(games));
+                userNotifications[game.email] = "Oyununuz kabul edilmiştir.";
+            } else {
+                userNotifications[game.email] = "Oyununuz reddedildi.";
+            }
+            
+            localStorage.setItem('discox_notifs', JSON.stringify(userNotifications));
+
+            pendingGames.splice(index, 1);
+            localStorage.setItem('discox_pending', JSON.stringify(pendingGames));
+
+            incelemeleriGoster();
+            oyunlariGoster();
+            alert(isApproved ? "Oyun onaylandı!" : "Oyun reddedildi.");
+        }
+
+        function sikayetleriGoster() {
+            let html = "";
+            complaintsQueue.forEach((comp, index) => {
+                html += `<div style="background:#1a1010; padding:8px; border-radius:6px; font-size:11px; border:1px solid #7f1d1d; display:flex; flex-direction:column; gap:5px;">
+                    <div><b>Gönderen:</b> ${comp.email}<br><b>İçerik:</b> ${comp.text}</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input type="number" id="banDays_${index}" value="3" style="width:60px; padding:4px; font-size:11px; height:28px;">
+                        <button type="button" onclick="kullaniciyiBanla('${comp.email}', ${index})" style="background:#ef4444; color:white; padding:4px 8px; font-size:11px; width:auto; height:28px;">Geçici Banla</button>
+                        <button type="button" onclick="sikayetSil(${index})" style="background:#334155; color:white; padding:4px 8px; font-size:11px; width:auto; height:28px;">Şikayeti Kaldır</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('complaints-list').innerHTML = html || "<p style='font-size:11px; color:#94a3b8;'>Hiç dilekçe veya şikayet yok.</p>";
+        }
+
+        function kullaniciyiBanla(targetEmail, index) {
+            const gunInput = document.getElementById(`banDays_${index}`).value;
+            const gunSayisi = parseInt(gunInput);
+
+            if (isNaN(gunSayisi) || gunSayisi <= 0) {
+                alert("Lütfen geçerli bir ban gün sayısı girin!");
+                return;
+            }
+
+            const banBitisMs = Date.now() + (gunSayisi * 24 * 60 * 60 * 1000);
+            bannedUsers[targetEmail] = banBitisMs;
+            localStorage.setItem('discox_bans', JSON.stringify(bannedUsers));
+
+            userNotifications[targetEmail] = `Hesabınız yöneticiler tarafından ${gunSayisi} gün süreyle askıya alındı!`;
+            localStorage.setItem('discox_notifs', JSON.stringify(userNotifications));
+
+            alert(`${targetEmail} adresli kullanıcı ${gunSayisi} gün süreyle geçici olarak banlandı.`);
+            sikayetSil(index);
+        }
+
+        function sikayetSil(index) {
+            complaintsQueue.splice(index, 1);
+            localStorage.setItem('discox_complaints', JSON.stringify(complaintsQueue));
+            sikayetleriGoster();
+        }
+
+        function bildirimleriGoster(email) {
+            if (userNotifications[email]) {
+                document.getElementById('notificationText').innerText = userNotifications[email];
+                document.getElementById('userNotificationBox').style.display = 'block';
+            }
+        }
+
+        function sikayetGonder() {
+            const text = document.getElementById('complaintText').value.trim();
+            if(!text) {
+                alert("Lütfen dilekçe veya şikayet sebebini yazın.");
+                return;
+            }
+
+            complaintsQueue.push({ email: loggedInEmail, text: text });
+            localStorage.setItem('discox_complaints', JSON.stringify(complaintsQueue));
+
+            document.getElementById('complaintText').value = '';
+            alert("Şikayetiniz yöneticiye iletildi.");
+            if(loggedInEmail.toLowerCase() === "discox3728@gmail.com") {
+                sikayetleriGoster();
+            }
+        }
+    </script>
+</body>
+</html>
